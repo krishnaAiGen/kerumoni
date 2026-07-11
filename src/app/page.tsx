@@ -1,8 +1,9 @@
 import Image from "next/image";
 import { getFeaturedProducts } from "@/data/products";
+import { getPublishedTestimonials } from "@/data/testimonials";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ButtonLink } from "@/components/ui/Button";
-import { Stars } from "@/components/ui/Stars";
+import { initials } from "@/lib/utils";
 
 const marqueeItems = [
   "ৰসুনৰ আচাৰ",
@@ -50,6 +51,12 @@ const testimonials = [
 
 export default async function LandingPage() {
   const featured = await getFeaturedProducts(6);
+  const published = await getPublishedTestimonials(6);
+
+  const reviews: { name: string; text: string; imageUrl: string | null }[] =
+    published.length > 0
+      ? published.map((p) => ({ name: p.userName, text: p.text, imageUrl: p.imageUrl }))
+      : testimonials.map((t) => ({ name: `${t.name} · ${t.city}`, text: t.text, imageUrl: null }));
 
   return (
     <>
@@ -170,12 +177,19 @@ export default async function LandingPage() {
           Loved across India
         </h2>
         <div className="grid gap-5 md:grid-cols-3">
-          {testimonials.map((t) => (
-            <figure key={t.name} className="rounded-2xl border border-line bg-paper/70 p-6">
-              <Stars rating={t.rating} />
-              <blockquote className="mt-3 text-ink">&ldquo;{t.text}&rdquo;</blockquote>
-              <figcaption className="mt-4 text-sm text-ink2">
-                {t.name} · {t.city}
+          {reviews.map((r, i) => (
+            <figure key={i} className="flex flex-col rounded-2xl border border-line bg-paper/70 p-6">
+              {r.imageUrl && (
+                <div className="relative mb-4 h-44 w-full overflow-hidden rounded-xl border border-line">
+                  <Image src={r.imageUrl} alt={r.name} fill unoptimized className="object-cover" />
+                </div>
+              )}
+              <blockquote className="text-ink">&ldquo;{r.text}&rdquo;</blockquote>
+              <figcaption className="mt-4 flex items-center gap-2 text-sm text-ink2">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-mustard text-xs font-bold text-deep">
+                  {initials(r.name)}
+                </span>
+                {r.name}
               </figcaption>
             </figure>
           ))}

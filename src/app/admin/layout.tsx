@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth-guards";
 import { getAdminKpis } from "@/data/metrics";
+import { getPendingReviewCount } from "@/data/testimonials";
 import { formatMoney } from "@/lib/utils";
 
 export const metadata = { title: "Admin · Kerumoni" };
@@ -8,6 +9,7 @@ export const metadata = { title: "Admin · Kerumoni" };
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
   const kpis = await getAdminKpis();
+  const pendingReviews = await getPendingReviewCount();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -24,6 +26,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Tab href="/admin/orders" label="Orders" />
         <Tab href="/admin/products" label="Products" />
         <Tab href="/admin/payments" label="Payments" />
+        <Tab
+          href="/admin/reviews"
+          label={pendingReviews > 0 ? `Reviews (${pendingReviews})` : "Reviews"}
+        />
       </nav>
 
       <div className="mt-8">{children}</div>

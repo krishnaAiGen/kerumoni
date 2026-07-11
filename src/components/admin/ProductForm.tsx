@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Label, Select, Textarea, FieldError } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { SPICE_LEVELS, SPICE_LABELS } from "@/lib/constants";
-import { sellingPrice, formatMoney } from "@/lib/utils";
+import { discountPercentOf } from "@/lib/utils";
 import type { ProductInput } from "@/lib/validators/product";
 
 type ExistingProduct = ProductInput & { id: string };
@@ -20,11 +20,14 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
 
   const [imageUrl, setImageUrl] = useState(product?.imageUrl ?? "");
   const [originalPrice, setOriginalPrice] = useState(String(product?.originalPrice ?? ""));
-  const [discountPercent, setDiscountPercent] = useState(String(product?.discountPercent ?? "0"));
+  const [sellingPriceInput, setSellingPriceInput] = useState(String(product?.price ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const preview = sellingPrice(Number(originalPrice) || 0, Number(discountPercent) || 0);
+  const previewDiscount = discountPercentOf(
+    Number(originalPrice) || 0,
+    Number(sellingPriceInput) || 0,
+  );
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +37,7 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
       name: String(form.get("name") ?? ""),
       assameseName: String(form.get("assameseName") ?? ""),
       originalPrice: Number(originalPrice) || 0,
-      discountPercent: Number(discountPercent) || 0,
+      price: Number(sellingPriceInput) || 0,
       weight: String(form.get("weight") ?? ""),
       spiceLevel: form.get("spiceLevel") as ProductInput["spiceLevel"],
       description: String(form.get("description") ?? ""),
@@ -104,30 +107,30 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
           <Input
             name="originalPrice"
             type="number"
-            step="0.01"
+            step="1"
             value={originalPrice}
             onChange={(e) => setOriginalPrice(e.target.value)}
-            placeholder="277.78"
+            placeholder="280"
             required
           />
         </div>
         <div>
-          <Label>Discount %</Label>
+          <Label>Selling price ₹</Label>
           <Input
-            name="discountPercent"
+            name="price"
             type="number"
-            min="0"
-            max="100"
-            value={discountPercent}
-            onChange={(e) => setDiscountPercent(e.target.value)}
-            placeholder="10"
+            step="1"
+            value={sellingPriceInput}
+            onChange={(e) => setSellingPriceInput(e.target.value)}
+            placeholder="250"
+            required
           />
         </div>
         <div className="sm:col-span-2">
           <div className="flex items-center justify-between rounded-xl border border-line bg-deep/40 px-4 py-3">
-            <span className="text-sm text-ink2">Selling price (auto-calculated)</span>
-            <span className="font-serif text-2xl font-semibold text-mustard">
-              {formatMoney(preview)}
+            <span className="text-sm text-ink2">Discount (auto-calculated)</span>
+            <span className="font-serif text-2xl font-semibold text-green">
+              {previewDiscount}% OFF
             </span>
           </div>
         </div>

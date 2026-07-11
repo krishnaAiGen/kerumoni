@@ -22,6 +22,11 @@ export async function Navbar() {
           <Link href="/shop" className="transition-colors hover:text-ink">
             Shop
           </Link>
+          {session?.user && (
+            <Link href="/reviews/new" className="transition-colors hover:text-ink">
+              Write a review
+            </Link>
+          )}
           {isAdmin && (
             <Link href="/admin" className="transition-colors hover:text-ink">
               Admin

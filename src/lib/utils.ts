@@ -22,9 +22,10 @@ export function formatMoneyExact(rupees: number): string {
   );
 }
 
-/** Selling price from an MRP and a discount percentage (rounded to whole rupees). */
-export function sellingPrice(originalPrice: number, discountPercent: number): number {
-  return Math.round(originalPrice * (1 - discountPercent / 100));
+/** Discount percentage implied by an MRP and a selling price (whole number). */
+export function discountPercentOf(originalPrice: number, price: number): number {
+  if (!originalPrice || originalPrice <= 0 || price >= originalPrice) return 0;
+  return Math.round((1 - price / originalPrice) * 100);
 }
 
 /** Format a date as "11 Jul 2026". */

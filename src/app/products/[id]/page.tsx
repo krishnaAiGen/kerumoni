@@ -118,7 +118,7 @@ export default async function ProductPage({
           </div>
         </div>
 
-        <ReviewForm productId={product.id} />
+        <ReviewForm />
       </div>
     </div>
   );

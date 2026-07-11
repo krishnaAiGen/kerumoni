@@ -19,7 +19,7 @@ export default async function EditProductPage({
           name: product.name,
           assameseName: product.assameseName,
           originalPrice: product.originalPrice,
-          discountPercent: product.discountPercent,
+          price: product.price,
           weight: product.weight,
           spiceLevel: product.spiceLevel,
           description: product.description,

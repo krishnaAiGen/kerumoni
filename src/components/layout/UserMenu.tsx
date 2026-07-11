@@ -26,6 +26,9 @@ export function UserMenu({ name, isAdmin }: { name: string; isAdmin: boolean }) 
           <Link href="/account" className="block px-4 py-2 text-sm text-ink hover:bg-cream2">
             My orders
           </Link>
+          <Link href="/reviews/new" className="block px-4 py-2 text-sm text-ink hover:bg-cream2">
+            Write a review
+          </Link>
           {isAdmin && (
             <Link href="/admin" className="block px-4 py-2 text-sm text-ink hover:bg-cream2">
               Admin dashboard

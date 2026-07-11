@@ -39,6 +39,11 @@ enum PaymentStatus {
   FAILED
 }
 
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+}
+
 model User {
   id            String       @id @default(cuid())
   name          String
@@ -50,10 +55,26 @@ model User {
   role         Role         @default(USER)
   createdAt    DateTime     @default(now())
 
-  orders    Order[]
-  cartItems CartItem[]
-  accounts  Account[]
-  sessions  Session[]
+  orders       Order[]
+  cartItems    CartItem[]
+  accounts     Account[]
+  sessions     Session[]
+  testimonials Testimonial[]
+}
+
+// Moderated customer review shown across the site (optional photo).
+model Testimonial {
+  id        String       @id @default(cuid())
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userName  String
+  text      String
+  imageUrl  String?
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Product {
