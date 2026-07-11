@@ -50,12 +50,23 @@ body {
   color: var(--ink);
   font-family: var(--font-karla), system-ui, sans-serif;
   background-color: var(--bg);
+}
+
+/* Fixed full-viewport backdrop: sized to the screen (not the tall document),
+   so it stays centered and never zoom-crops on mobile like a `fixed` body
+   background does on iOS. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background-image:
     linear-gradient(rgba(19, 12, 6, 0.86), rgba(17, 11, 6, 0.9), rgba(14, 9, 5, 0.96)),
     url("/spice-bg.png");
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 
 h1, h2, h3, h4 {
