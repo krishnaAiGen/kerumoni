@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { addToCart } from "@/actions/cart.actions";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { useCartDrawer } from "@/components/cart/CartDrawerContext";
 
 export function AddToCartButton({
   productId,
@@ -25,6 +26,7 @@ export function AddToCartButton({
   const router = useRouter();
   const { status } = useSession();
   const { toast } = useToast();
+  const { openCart } = useCartDrawer();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
 
@@ -50,8 +52,8 @@ export function AddToCartButton({
       if (mode === "buy") {
         router.push("/checkout");
       } else {
-        toast(`${productName} added to cart`);
-        router.refresh();
+        router.refresh(); // update the navbar cart badge
+        openCart(); // slide in the cart drawer with fresh contents
       }
     });
   }
@@ -61,10 +63,16 @@ export function AddToCartButton({
       variant={mode === "buy" ? "primary" : "secondary"}
       size={size}
       onClick={onClick}
-      disabled={pending || busy}
+      loading={pending || busy}
       className={className}
     >
-      {mode === "buy" ? "Buy now" : "Add to cart"}
+      {pending || busy
+        ? mode === "buy"
+          ? "Processing…"
+          : "Adding…"
+        : mode === "buy"
+          ? "Buy now"
+          : "Add to cart"}
     </Button>
   );
 }

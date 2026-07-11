@@ -3,12 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { getCart } from "@/data/cart";
 
 type ActionResult = { ok: boolean; error?: string; requiresAuth?: boolean };
 
 async function userId(): Promise<string | null> {
   const session = await auth();
   return session?.user?.id ?? null;
+}
+
+/** Read the current user's cart (lines + totals) from a client component. */
+export async function fetchCart() {
+  return getCart();
 }
 
 export async function addToCart(productId: string, qty = 1): Promise<ActionResult> {

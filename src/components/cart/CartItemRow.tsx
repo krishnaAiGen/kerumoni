@@ -1,27 +1,42 @@
 "use client";
 
 import Image from "next/image";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateCartItemQty, removeFromCart } from "@/actions/cart.actions";
 import { formatMoney } from "@/lib/utils";
+import { Spinner } from "@/components/ui/Spinner";
 import type { CartLine } from "@/data/cart";
 
-export function CartItemRow({ line }: { line: CartLine }) {
+export function CartItemRow({
+  line,
+  onChanged,
+}: {
+  line: CartLine;
+  /** Called after a qty/remove mutation — used by the cart drawer to re-fetch. */
+  onChanged?: () => void;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [action, setAction] = useState<"qty" | "remove" | null>(null);
 
   function change(qty: number) {
+    setAction("qty");
     startTransition(async () => {
       await updateCartItemQty(line.productId, qty);
       router.refresh();
+      onChanged?.();
+      setAction(null);
     });
   }
 
   function remove() {
+    setAction("remove");
     startTransition(async () => {
       await removeFromCart(line.productId);
       router.refresh();
+      onChanged?.();
+      setAction(null);
     });
   }
 
@@ -50,7 +65,9 @@ export function CartItemRow({ line }: { line: CartLine }) {
         >
           −
         </button>
-        <span className="w-8 text-center text-sm text-ink">{line.qty}</span>
+        <span className="flex w-8 items-center justify-center text-sm text-ink">
+          {action === "qty" ? <Spinner className="h-3.5 w-3.5" /> : line.qty}
+        </span>
         <button
           onClick={() => change(line.qty + 1)}
           disabled={pending}
@@ -68,9 +85,10 @@ export function CartItemRow({ line }: { line: CartLine }) {
       <button
         onClick={remove}
         disabled={pending}
-        className="text-sm text-terra-d hover:underline disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 text-sm text-terra-d hover:underline disabled:opacity-50"
       >
-        Remove
+        {action === "remove" && <Spinner className="h-3 w-3" />}
+        {action === "remove" ? "Removing…" : "Remove"}
       </button>
     </div>
   );

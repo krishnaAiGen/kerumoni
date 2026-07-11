@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Spinner } from "./Spinner";
 
 type Variant = "primary" | "secondary" | "ghost" | "success";
 type Size = "sm" | "md" | "lg";
@@ -23,16 +24,29 @@ const sizes: Record<Size, string> = {
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   size?: Size;
+  /** Show a round spinner and disable the button while an action is in flight. */
+  loading?: boolean;
 };
 
 export function Button({
   variant = "primary",
   size = "md",
   className,
+  loading = false,
+  disabled,
+  children,
   ...props
 }: ButtonProps) {
   return (
-    <button className={cn(base, variants[variant], sizes[size], className)} {...props} />
+    <button
+      className={cn(base, variants[variant], sizes[size], className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...props}
+    >
+      {loading && <Spinner />}
+      {children}
+    </button>
   );
 }
 

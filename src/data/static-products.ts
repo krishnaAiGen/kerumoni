@@ -17,6 +17,8 @@ export type StaticProduct = {
   id: string;
   name: string;
   assameseName: string;
+  originalPrice: number;
+  discountPercent: number;
   price: number;
   weight: string;
   spiceLevel: SpiceLevel;
@@ -41,7 +43,9 @@ export const STATIC_PRODUCTS: StaticProduct[] = [
     id: "garlic",
     name: "Garlic Pickle",
     assameseName: "ৰসুনৰ আচাৰ",
-    price: 200,
+    originalPrice: 166.67,
+    discountPercent: 10,
+    price: 150,
     weight: "200g",
     spiceLevel: "MEDIUM",
     toneColor: "#c98a2a",
@@ -60,7 +64,9 @@ export const STATIC_PRODUCTS: StaticProduct[] = [
     id: "amla",
     name: "Amla Pickle",
     assameseName: "আমলাখি আচাৰ",
-    price: 200,
+    originalPrice: 200,
+    discountPercent: 10,
+    price: 180,
     weight: "200g",
     spiceLevel: "MILD",
     toneColor: "#6a7b3f",
@@ -79,7 +85,9 @@ export const STATIC_PRODUCTS: StaticProduct[] = [
     id: "chicken",
     name: "Chicken Pickle",
     assameseName: "মুৰ্গী মাংস আচাৰ",
-    price: 350,
+    originalPrice: 277.78,
+    discountPercent: 10,
+    price: 250,
     weight: "200g",
     spiceLevel: "HOT",
     toneColor: "#7a2f1e",
@@ -98,7 +106,9 @@ export const STATIC_PRODUCTS: StaticProduct[] = [
     id: "mango",
     name: "Mango Chilli Pickle",
     assameseName: "আম জলকীয়া আচাৰ",
-    price: 220,
+    originalPrice: 166.67,
+    discountPercent: 10,
+    price: 150,
     weight: "200g",
     spiceLevel: "HOT",
     toneColor: "#c76a28",
@@ -117,7 +127,9 @@ export const STATIC_PRODUCTS: StaticProduct[] = [
     id: "ghost",
     name: "Ghost Pepper Pickle",
     assameseName: "ভোট জলকীয়া আচাৰ",
-    price: 260,
+    originalPrice: 277.78,
+    discountPercent: 10,
+    price: 250,
     weight: "200g",
     spiceLevel: "FIERY",
     toneColor: "#9d2f22",

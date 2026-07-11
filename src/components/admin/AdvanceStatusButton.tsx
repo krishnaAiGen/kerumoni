@@ -28,7 +28,7 @@ export function AdvanceStatusButton({
     <Button
       size="sm"
       variant="secondary"
-      disabled={pending}
+      loading={pending}
       onClick={() =>
         startTransition(async () => {
           const res = await advanceOrderStatus(orderId);
@@ -37,7 +37,7 @@ export function AdvanceStatusButton({
         })
       }
     >
-      {pending ? "…" : `Mark ${nextLabel}`}
+      {pending ? "Updating…" : `Mark ${nextLabel}`}
     </Button>
   );
 }

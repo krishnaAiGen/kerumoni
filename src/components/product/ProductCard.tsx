@@ -4,7 +4,7 @@ import type { ProductWithRating } from "@/data/products";
 import { SpiceBadge } from "@/components/ui/SpiceBadge";
 import { Stars } from "@/components/ui/Stars";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
-import { formatMoney } from "@/lib/utils";
+import { PriceTag } from "@/components/product/PriceTag";
 import type { SpiceLevel } from "@/lib/constants";
 
 export function ProductCard({ product }: { product: ProductWithRating }) {
@@ -29,21 +29,23 @@ export function ProductCard({ product }: { product: ProductWithRating }) {
       </Link>
 
       <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <Link href={`/products/${product.id}`}>
-              <h3 className="font-serif text-xl font-semibold text-ink hover:text-terra-d">
-                {product.name}
-              </h3>
-            </Link>
-            <p className="text-sm text-ink2">
-              {product.assameseName} · {product.weight}
-            </p>
-          </div>
-          <span className="font-serif text-xl font-semibold text-mustard">
-            {formatMoney(product.price)}
-          </span>
+        <div>
+          <Link href={`/products/${product.id}`}>
+            <h3 className="font-serif text-xl font-semibold text-ink hover:text-terra-d">
+              {product.name}
+            </h3>
+          </Link>
+          <p className="text-sm text-ink2">
+            {product.assameseName} · {product.weight}
+          </p>
         </div>
+
+        <PriceTag
+          className="mt-2"
+          price={product.price}
+          originalPrice={product.originalPrice}
+          discountPercent={product.discountPercent}
+        />
 
         <p className="mt-2 line-clamp-2 text-sm text-ink2">{product.description}</p>
 

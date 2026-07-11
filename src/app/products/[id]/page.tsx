@@ -5,7 +5,8 @@ import { SpiceBadge } from "@/components/ui/SpiceBadge";
 import { Stars } from "@/components/ui/Stars";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { ReviewForm } from "@/components/product/ReviewForm";
-import { formatMoney, formatMonth, initials } from "@/lib/utils";
+import { PriceTag } from "@/components/product/PriceTag";
+import { formatMonth, initials } from "@/lib/utils";
 import type { SpiceLevel } from "@/lib/constants";
 
 export default async function ProductPage({
@@ -51,9 +52,13 @@ export default async function ProductPage({
             </span>
           </div>
 
-          <p className="mt-5 font-serif text-3xl font-semibold text-mustard">
-            {formatMoney(product.price)}
-          </p>
+          <PriceTag
+            className="mt-5"
+            size="lg"
+            price={product.price}
+            originalPrice={product.originalPrice}
+            discountPercent={product.discountPercent}
+          />
 
           <p className="mt-5 text-ink2">{product.longDescription}</p>
 

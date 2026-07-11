@@ -89,8 +89,14 @@ export function AuthForm({ mode, next }: { mode: "login" | "register"; next: str
 
           <FieldError>{error}</FieldError>
 
-          <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
+          <Button type="submit" className="w-full" loading={pending}>
+            {pending
+              ? isRegister
+                ? "Creating account…"
+                : "Signing in…"
+              : isRegister
+                ? "Create account"
+                : "Sign in"}
           </Button>
         </form>
 

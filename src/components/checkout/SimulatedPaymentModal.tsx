@@ -29,7 +29,7 @@ export function SimulatedPaymentModal({
         <p className="font-semibold text-ink">{m?.label}</p>
         <p className="text-xs text-ink2">{m?.sub}</p>
       </div>
-      <Button variant="success" className="mt-5 w-full" onClick={onConfirm} disabled={pending}>
+      <Button variant="success" className="mt-5 w-full" onClick={onConfirm} loading={pending}>
         {pending ? "Processing…" : `Pay ${formatMoney(amount)}`}
       </Button>
       <p className="mt-3 text-center text-xs text-ink2">

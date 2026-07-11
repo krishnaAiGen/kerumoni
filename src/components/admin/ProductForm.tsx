@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import { createProduct, updateProduct } from "@/actions/product.actions";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, Select, Textarea, FieldError } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { SPICE_LEVELS, SPICE_LABELS } from "@/lib/constants";
+import { sellingPrice, formatMoney } from "@/lib/utils";
 import type { ProductInput } from "@/lib/validators/product";
 
 type ExistingProduct = ProductInput & { id: string };
@@ -16,45 +17,14 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
   const router = useRouter();
   const { toast } = useToast();
   const isEdit = !!product;
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const [imageUrl, setImageUrl] = useState(product?.imageUrl ?? "");
-  const [uploading, setUploading] = useState(false);
+  const [originalPrice, setOriginalPrice] = useState(String(product?.originalPrice ?? ""));
+  const [discountPercent, setDiscountPercent] = useState(String(product?.discountPercent ?? "0"));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setError(null);
-    try {
-      const presign = await fetch("/api/uploads/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type }),
-      }).then((r) => r.json());
-
-      if (!presign.ok) {
-        setError(presign.error ?? "Upload not available — paste an image URL instead.");
-        return;
-      }
-
-      const put = await fetch(presign.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!put.ok) {
-        setError("Upload failed.");
-        return;
-      }
-      setImageUrl(presign.publicUrl);
-      toast("Image uploaded");
-    } finally {
-      setUploading(false);
-    }
-  }
+  const preview = sellingPrice(Number(originalPrice) || 0, Number(discountPercent) || 0);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,7 +33,8 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
     const input: ProductInput = {
       name: String(form.get("name") ?? ""),
       assameseName: String(form.get("assameseName") ?? ""),
-      price: Number(form.get("price") ?? 0),
+      originalPrice: Number(originalPrice) || 0,
+      discountPercent: Number(discountPercent) || 0,
       weight: String(form.get("weight") ?? ""),
       spiceLevel: form.get("spiceLevel") as ProductInput["spiceLevel"],
       description: String(form.get("description") ?? ""),
@@ -92,12 +63,12 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-line bg-paper/70 p-6">
       <h3 className="font-serif text-2xl font-semibold text-ink">
-        {isEdit ? "Edit pickle" : "Upload new pickle"}
+        {isEdit ? "Edit pickle" : "Add new pickle"}
       </h3>
 
       {/* Image */}
       <div>
-        <Label>Image</Label>
+        <Label>Image URL</Label>
         <div className="flex items-center gap-4">
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-line bg-deep/40">
             {imageUrl ? (
@@ -107,28 +78,14 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
             )}
           </div>
           <div className="flex-1">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              onChange={onFileChange}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={uploading}
-              onClick={() => fileRef.current?.click()}
-            >
-              {uploading ? "Uploading…" : "Upload to S3"}
-            </Button>
             <Input
-              className="mt-2"
-              placeholder="…or paste an image URL"
+              placeholder="/products/garlic.png or https://…"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
             />
+            <p className="mt-1.5 text-xs text-ink2">
+              Use a path in <code>/public</code> (e.g. <code>/products/garlic.png</code>) or a full image URL.
+            </p>
           </div>
         </div>
       </div>
@@ -143,8 +100,36 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
           <Input name="assameseName" defaultValue={product?.assameseName} placeholder="নহৰু আচাৰ" required />
         </div>
         <div>
-          <Label>Price ₹</Label>
-          <Input name="price" type="number" defaultValue={product?.price} placeholder="249" required />
+          <Label>Original price ₹ (MRP)</Label>
+          <Input
+            name="originalPrice"
+            type="number"
+            step="0.01"
+            value={originalPrice}
+            onChange={(e) => setOriginalPrice(e.target.value)}
+            placeholder="277.78"
+            required
+          />
+        </div>
+        <div>
+          <Label>Discount %</Label>
+          <Input
+            name="discountPercent"
+            type="number"
+            min="0"
+            max="100"
+            value={discountPercent}
+            onChange={(e) => setDiscountPercent(e.target.value)}
+            placeholder="10"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <div className="flex items-center justify-between rounded-xl border border-line bg-deep/40 px-4 py-3">
+            <span className="text-sm text-ink2">Selling price (auto-calculated)</span>
+            <span className="font-serif text-2xl font-semibold text-mustard">
+              {formatMoney(preview)}
+            </span>
+          </div>
         </div>
         <div>
           <Label>Weight</Label>
@@ -181,8 +166,14 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
 
       <FieldError>{error}</FieldError>
 
-      <Button type="submit" disabled={pending || uploading}>
-        {pending ? "Saving…" : isEdit ? "Save changes" : "Publish pickle"}
+      <Button type="submit" loading={pending}>
+        {pending
+          ? isEdit
+            ? "Saving…"
+            : "Publishing…"
+          : isEdit
+            ? "Save changes"
+            : "Publish pickle"}
       </Button>
     </form>
   );

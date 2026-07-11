@@ -10,6 +10,23 @@ export function formatMoney(rupees: number): string {
   return "₹" + Math.round(rupees).toLocaleString("en-IN");
 }
 
+/** Format rupees showing 2 decimals only when the amount isn't whole (₹200, ₹277.78). */
+export function formatMoneyExact(rupees: number): string {
+  const whole = Number.isInteger(rupees);
+  return (
+    "₹" +
+    rupees.toLocaleString("en-IN", {
+      minimumFractionDigits: whole ? 0 : 2,
+      maximumFractionDigits: 2,
+    })
+  );
+}
+
+/** Selling price from an MRP and a discount percentage (rounded to whole rupees). */
+export function sellingPrice(originalPrice: number, discountPercent: number): number {
+  return Math.round(originalPrice * (1 - discountPercent / 100));
+}
+
 /** Format a date as "11 Jul 2026". */
 export function formatDate(date: Date | string | number): string {
   const d = new Date(date);

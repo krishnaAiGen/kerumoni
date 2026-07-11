@@ -73,7 +73,7 @@ export function ReviewForm({ productId }: { productId: string }) {
         className="mt-4"
         required
       />
-      <Button type="submit" className="mt-4" disabled={pending}>
+      <Button type="submit" className="mt-4" loading={pending}>
         {pending ? "Posting…" : "Post review"}
       </Button>
     </form>

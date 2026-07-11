@@ -158,7 +158,7 @@ export function CheckoutForm({ totals }: { totals: Totals }) {
 
         <div className="h-fit">
           <OrderSummary subtotal={totals.subtotal} shipping={totals.shipping} total={totals.total}>
-            <Button type="submit" className="mt-5 w-full" disabled={pending}>
+            <Button type="submit" className="mt-5 w-full" loading={pending}>
               {pending ? "Processing…" : `Pay ${formatMoney(totals.total)} securely`}
             </Button>
             <p className="mt-3 text-center text-xs text-ink2">🔒 Secured payment</p>

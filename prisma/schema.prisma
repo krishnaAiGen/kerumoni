@@ -1,12 +1,13 @@
-// Kerumoni — Prisma schema (PostgreSQL / AWS RDS)
+// Kerumoni — Prisma schema (PostgreSQL — Supabase / any Postgres)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -39,10 +40,12 @@ enum PaymentStatus {
 }
 
 model User {
-  id           String       @id @default(cuid())
-  name         String
-  email        String       @unique
-  passwordHash String? // null for OAuth-only users
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  emailVerified DateTime? // Auth.js adapter (OAuth) — required column
+  image         String? // Auth.js adapter — Google avatar URL
+  passwordHash  String? // null for OAuth-only users
   authProvider AuthProvider @default(CREDENTIALS)
   role         Role         @default(USER)
   createdAt    DateTime     @default(now())
@@ -57,7 +60,9 @@ model Product {
   id              String     @id @default(cuid())
   name            String
   assameseName    String
-  price           Int // integer rupees
+  originalPrice   Float      @default(0) // MRP entered by admin
+  discountPercent Int        @default(0) // 0..100
+  price           Int // selling price (integer rupees) = round(originalPrice * (1 - discountPercent/100))
   weight          String // e.g. "250g"
   spiceLevel      SpiceLevel
   toneColor       String // hex, for card background

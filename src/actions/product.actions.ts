@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { productSchema, type ProductInput } from "@/lib/validators/product";
 import { TONE_COLORS } from "@/lib/constants";
+import { sellingPrice } from "@/lib/utils";
 
 type ActionResult = { ok: boolean; error?: string; id?: string };
 
@@ -29,7 +30,9 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
     data: {
       name: d.name,
       assameseName: d.assameseName,
-      price: d.price,
+      originalPrice: d.originalPrice,
+      discountPercent: d.discountPercent,
+      price: sellingPrice(d.originalPrice, d.discountPercent),
       weight: d.weight,
       spiceLevel: d.spiceLevel,
       toneColor: tone,
@@ -60,7 +63,9 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ac
     data: {
       name: d.name,
       assameseName: d.assameseName,
-      price: d.price,
+      originalPrice: d.originalPrice,
+      discountPercent: d.discountPercent,
+      price: sellingPrice(d.originalPrice, d.discountPercent),
       weight: d.weight,
       spiceLevel: d.spiceLevel,
       description: d.description,
