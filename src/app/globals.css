@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Kerumoni — brand theme tokens (dark warm earthy palette)
+--------------------------------------------------------------------------- */
+:root {
+  --cream: #33251a;
+  --cream2: #3e2d1e;
+  --paper: #271a11;
+  --terra: #b5482a;
+  --terra-d: #cd6440;
+  --mustard: #e0ad3f;
+  --mustard-d: #cf9a2a;
+  --ink: #f4e8d2;
+  --ink2: #c2aa8d;
+  --line: #4a3826;
+  --green: #8fa05c;
+  --deep: #150d06;
+  --bg: #170f08;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-cream2: var(--cream2);
+  --color-paper: var(--paper);
+  --color-terra: var(--terra);
+  --color-terra-d: var(--terra-d);
+  --color-mustard: var(--mustard);
+  --color-mustard-d: var(--mustard-d);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-line: var(--line);
+  --color-green: var(--green);
+  --color-deep: var(--deep);
+
+  --font-serif: var(--font-cormorant);
+  --font-sans: var(--font-karla);
+}
+
+* {
+  border-color: var(--line);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--font-karla), system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(19, 12, 6, 0.86), rgba(17, 11, 6, 0.9), rgba(14, 9, 5, 0.96)),
+    url("/spice-bg.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-cormorant), Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--mustard);
+  color: #fff;
+}
+
+/* thin scrollbar in warm tones */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--deep); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--terra); }
+
+/* marquee animation for the hero strip */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+
+/* fade/slide utility for toasts and modals */
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-pop-in {
+  animation: pop-in 0.18s ease-out;
+}
