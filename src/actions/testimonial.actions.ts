@@ -17,6 +17,7 @@ export async function submitTestimonial(formData: FormData): Promise<SubmitResul
 
   const parsed = testimonialSchema.safeParse({
     userName: String(formData.get("userName") ?? ""),
+    rating: Number(formData.get("rating") ?? 0),
     text: String(formData.get("text") ?? ""),
   });
   if (!parsed.success) {
@@ -46,6 +47,7 @@ export async function submitTestimonial(formData: FormData): Promise<SubmitResul
     data: {
       userId: session.user.id,
       userName: parsed.data.userName,
+      rating: parsed.data.rating,
       text: parsed.data.text,
       imageUrl,
       status: "PENDING",

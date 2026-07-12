@@ -23,6 +23,7 @@ export default async function AdminReviewsPage() {
                 review={{
                   id: r.id,
                   userName: r.userName,
+                  rating: r.rating,
                   text: r.text,
                   imageUrl: r.imageUrl,
                   createdAt: r.createdAt,
@@ -47,6 +48,7 @@ export default async function AdminReviewsPage() {
                 review={{
                   id: r.id,
                   userName: r.userName,
+                  rating: r.rating,
                   text: r.text,
                   imageUrl: r.imageUrl,
                   createdAt: r.createdAt,

@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { publishTestimonial, rejectTestimonial } from "@/actions/testimonial.actions";
 import { Button } from "@/components/ui/Button";
+import { Stars } from "@/components/ui/Stars";
 import { useToast } from "@/components/ui/Toast";
 import { formatDate, initials } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ export function ReviewModerationCard({
   review: {
     id: string;
     userName: string;
+    rating: number;
     text: string;
     imageUrl: string | null;
     createdAt: string | Date;
@@ -48,6 +50,9 @@ export function ReviewModerationCard({
           <p className="font-medium text-ink">{review.userName}</p>
           <p className="text-xs text-ink2">{formatDate(review.createdAt)}</p>
         </div>
+        <span className="ml-auto">
+          <Stars rating={review.rating} />
+        </span>
       </div>
 
       <p className="mt-3 text-ink2">{review.text}</p>

@@ -1,8 +1,10 @@
 import Image from "next/image";
+import { auth } from "@/lib/auth";
 import { getFeaturedProducts } from "@/data/products";
 import { getPublishedTestimonials } from "@/data/testimonials";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ButtonLink } from "@/components/ui/Button";
+import { Stars } from "@/components/ui/Stars";
 import { initials } from "@/lib/utils";
 
 const marqueeItems = [
@@ -50,13 +52,24 @@ const testimonials = [
 ];
 
 export default async function LandingPage() {
+  const session = await auth();
   const featured = await getFeaturedProducts(6);
   const published = await getPublishedTestimonials(6);
 
-  const reviews: { name: string; text: string; imageUrl: string | null }[] =
+  const reviews: { name: string; text: string; imageUrl: string | null; rating: number }[] =
     published.length > 0
-      ? published.map((p) => ({ name: p.userName, text: p.text, imageUrl: p.imageUrl }))
-      : testimonials.map((t) => ({ name: `${t.name} · ${t.city}`, text: t.text, imageUrl: null }));
+      ? published.map((p) => ({
+          name: p.userName,
+          text: p.text,
+          imageUrl: p.imageUrl,
+          rating: p.rating,
+        }))
+      : testimonials.map((t) => ({
+          name: `${t.name} · ${t.city}`,
+          text: t.text,
+          imageUrl: null,
+          rating: t.rating,
+        }));
 
   return (
     <>
@@ -82,7 +95,7 @@ export default async function LandingPage() {
           </ButtonLink>
         </div>
         <div className="mt-9 flex flex-wrap justify-center gap-8 text-sm">
-          <Stat value="4.8★" label="3,200+ ratings" />
+          <Stat value="4.8★" label="100+ ratings" />
           <Stat value="100%" label="No preservatives" />
           <Stat value="2-day" label="Fresh dispatch" />
         </div>
@@ -121,6 +134,29 @@ export default async function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* Review invite banner (logged-out only) */}
+      {!session?.user && (
+        <section className="bg-[#7a2f1c]">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 text-center sm:flex-row sm:px-6 sm:text-left">
+            <div>
+              <p className="font-serif text-2xl font-semibold text-ink">
+                Loved our pickles? Tell the world.
+              </p>
+              <p className="text-ink/85">
+                Sign in to write a review — add a photo if you like.
+              </p>
+            </div>
+            <ButtonLink
+              href="/login?next=/reviews/new"
+              size="lg"
+              className="bg-ink text-deep hover:bg-mustard shrink-0"
+            >
+              Write a review
+            </ButtonLink>
+          </div>
+        </section>
+      )}
 
       {/* Story */}
       <section id="story" className="border-y border-line bg-deep/40">
@@ -184,6 +220,7 @@ export default async function LandingPage() {
                   <Image src={r.imageUrl} alt={r.name} fill unoptimized className="object-cover" />
                 </div>
               )}
+              <Stars rating={r.rating} className="mb-3" />
               <blockquote className="text-ink">&ldquo;{r.text}&rdquo;</blockquote>
               <figcaption className="mt-4 flex items-center gap-2 text-sm text-ink2">
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-mustard text-xs font-bold text-deep">

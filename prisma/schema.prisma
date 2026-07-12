@@ -68,6 +68,7 @@ model Testimonial {
   userId    String?
   user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   userName  String
+  rating    Int          @default(5) // 1..5 stars
   text      String
   imageUrl  String?
   status    ReviewStatus @default(PENDING)

@@ -7,12 +7,14 @@ import { submitTestimonial } from "@/actions/testimonial.actions";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, Textarea, FieldError } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
+import { cn } from "@/lib/utils";
 
 export function ReviewSubmitForm({ defaultName }: { defaultName: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [rating, setRating] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -46,6 +48,27 @@ export function ReviewSubmitForm({ defaultName }: { defaultName: string }) {
       <div>
         <Label>Your name *</Label>
         <Input name="userName" defaultValue={defaultName} placeholder="Priya Sharma" required />
+      </div>
+
+      <div>
+        <Label>Your rating *</Label>
+        <input type="hidden" name="rating" value={rating} />
+        <div className="flex gap-1 text-3xl">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setRating(n)}
+              className={cn(
+                "transition-colors",
+                n <= rating ? "text-mustard" : "text-line hover:text-mustard/60",
+              )}
+              aria-label={`${n} star${n === 1 ? "" : "s"}`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
