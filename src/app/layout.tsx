@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { getCartCount } from "@/data/cart";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -23,16 +24,18 @@ export const metadata: Metadata = {
     "The taste of Assam, in a jar. Sun-cured garlic, tangy amla, zesty raw mango and fiery bhut jolokia — pickled the way our aai taught us, packed fresh to your door.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cartCount = await getCartCount();
+
   return (
     <html
       lang="en"
       className={`${cormorant.variable} ${karla.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers>
+        <Providers initialCartCount={cartCount}>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

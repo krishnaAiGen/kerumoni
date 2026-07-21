@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 export function CartDrawer() {
-  const { open, cart, loading, closeCart, refresh } = useCartDrawer();
+  const { open, cart, loading, closeCart } = useCartDrawer();
 
   // Escape to close + lock body scroll while open (mirrors Modal.tsx).
   useEffect(() => {
@@ -77,9 +77,7 @@ export function CartDrawer() {
               <p className="mt-2 text-sm text-ink2">Go add a jar or two of goodness.</p>
             </div>
           ) : (
-            cart.lines.map((line) => (
-              <CartItemRow key={line.productId} line={line} onChanged={refresh} />
-            ))
+            cart.lines.map((line) => <CartItemRow key={line.productId} line={line} />)
           )}
         </div>
 

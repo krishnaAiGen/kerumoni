@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getCartCount } from "@/data/cart";
 import { Logo } from "./Logo";
 import { UserMenu } from "./UserMenu";
+import { CartBadge } from "./CartBadge";
 import { ButtonLink } from "@/components/ui/Button";
 
 export async function Navbar() {
   const session = await auth();
-  const count = await getCartCount();
   const isAdmin = session?.user?.role === "ADMIN";
 
   return (
@@ -35,17 +34,7 @@ export async function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/cart"
-            className="relative rounded-full border border-line px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-terra"
-          >
-            Cart
-            {count > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-terra px-1 text-[11px] font-bold text-ink">
-                {count}
-              </span>
-            )}
-          </Link>
+          <CartBadge />
 
           {session?.user ? (
             <UserMenu name={session.user.name ?? "Guest"} isAdmin={isAdmin} />

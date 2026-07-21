@@ -71,19 +71,8 @@ export default async function ProductPage({
           </p>
 
           <div className="mt-6 flex gap-3">
-            <AddToCartButton
-              productId={product.id}
-              productName={product.name}
-              size="lg"
-              className="flex-1"
-            />
-            <AddToCartButton
-              productId={product.id}
-              productName={product.name}
-              mode="buy"
-              size="lg"
-              className="flex-1"
-            />
+            <AddToCartButton product={product} size="lg" className="flex-1" />
+            <AddToCartButton product={product} mode="buy" size="lg" className="flex-1" />
           </div>
         </div>
       </div>

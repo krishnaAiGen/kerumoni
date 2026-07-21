@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { reviewSchema } from "@/lib/validators/checkout";
@@ -31,6 +31,7 @@ export async function submitReview(
     },
   });
 
+  revalidateTag("products", "max");
   revalidatePath(`/products/${productId}`);
   revalidatePath("/shop");
   return { ok: true };

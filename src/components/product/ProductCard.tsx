@@ -59,17 +59,8 @@ export function ProductCard({ product }: { product: ProductWithRating }) {
         </div>
 
         <div className="mt-4 flex gap-2">
-          <AddToCartButton
-            productId={product.id}
-            productName={product.name}
-            className="flex-1"
-          />
-          <AddToCartButton
-            productId={product.id}
-            productName={product.name}
-            mode="buy"
-            className="flex-1"
-          />
+          <AddToCartButton product={product} className="flex-1" />
+          <AddToCartButton product={product} mode="buy" className="flex-1" />
         </div>
       </div>
     </div>

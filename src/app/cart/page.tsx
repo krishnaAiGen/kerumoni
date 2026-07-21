@@ -1,8 +1,6 @@
 import { getCart } from "@/data/cart";
 import { auth } from "@/lib/auth";
-import { CartItemRow } from "@/components/cart/CartItemRow";
-import { OrderSummary } from "@/components/cart/OrderSummary";
-import { CheckoutButton } from "@/components/cart/CheckoutButton";
+import { CartView } from "@/components/cart/CartView";
 import { ButtonLink } from "@/components/ui/Button";
 
 export const metadata = { title: "Cart · Kerumoni" };
@@ -21,38 +19,7 @@ export default async function CartPage() {
     );
   }
 
-  if (cart.lines.length === 0) {
-    return (
-      <EmptyState
-        title="Your cart is empty"
-        subtitle="Go add a jar or two of goodness."
-        cta={{ href: "/shop", label: "Browse pickles" }}
-      />
-    );
-  }
-
-  return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-      <h1 className="font-serif text-4xl font-semibold text-ink">Your cart</h1>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
-        <div>
-          {cart.lines.map((line) => (
-            <CartItemRow key={line.productId} line={line} />
-          ))}
-        </div>
-        <div className="h-fit">
-          <OrderSummary
-            subtotal={cart.subtotal}
-            shipping={null}
-            total={null}
-            shippingNote="Shipping is calculated at checkout from your delivery city."
-          >
-            <CheckoutButton count={cart.count} />
-          </OrderSummary>
-        </div>
-      </div>
-    </div>
-  );
+  return <CartView initialCart={cart} />;
 }
 
 function EmptyState({

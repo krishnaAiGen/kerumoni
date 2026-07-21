@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import {
@@ -40,19 +41,41 @@ async function withRatings(
   });
 }
 
+/**
+ * Product catalog reads for Home/Shop are cached so those pages don't hit the
+ * (currently far-away) database on every visit. The cache is invalidated by
+ * `revalidateTag("products")` whenever a product or review changes — see
+ * product.actions.ts and review.actions.ts. `revalidate` is a safety-net TTL.
+ */
+const loadAllProducts = unstable_cache(
+  async (): Promise<ProductWithRating[]> => {
+    const products = await prisma.product.findMany({ orderBy: { createdAt: "asc" } });
+    return withRatings(products);
+  },
+  ["all-products"],
+  { tags: ["products"], revalidate: 300 },
+);
+
+const loadFeaturedProducts = unstable_cache(
+  async (limit: number): Promise<ProductWithRating[]> => {
+    const products = await prisma.product.findMany({
+      orderBy: { createdAt: "asc" },
+      take: limit,
+    });
+    return withRatings(products);
+  },
+  ["featured-products"],
+  { tags: ["products"], revalidate: 300 },
+);
+
 export async function getAllProducts(): Promise<ProductWithRating[]> {
   if (!hasDatabase()) return STATIC_PRODUCTS.map(staticToProduct);
-  const products = await prisma.product.findMany({ orderBy: { createdAt: "asc" } });
-  return withRatings(products);
+  return loadAllProducts();
 }
 
 export async function getFeaturedProducts(limit = 4): Promise<ProductWithRating[]> {
   if (!hasDatabase()) return STATIC_PRODUCTS.slice(0, limit).map(staticToProduct);
-  const products = await prisma.product.findMany({
-    orderBy: { createdAt: "asc" },
-    take: limit,
-  });
-  return withRatings(products);
+  return loadFeaturedProducts(limit);
 }
 
 export type ProductDetail = Prisma.ProductGetPayload<{ include: { reviews: true } }> & {

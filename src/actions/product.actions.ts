@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { productSchema, type ProductInput } from "@/lib/validators/product";
@@ -43,6 +43,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
     },
   });
 
+  revalidateTag("products", "max");
   revalidatePath("/shop");
   revalidatePath("/admin/products");
   revalidatePath("/");
@@ -76,6 +77,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ac
     },
   });
 
+  revalidateTag("products", "max");
   revalidatePath("/shop");
   revalidatePath(`/products/${id}`);
   revalidatePath("/admin/products");
@@ -85,7 +87,9 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ac
 export async function deleteProduct(id: string): Promise<ActionResult> {
   if (!(await assertAdmin())) return { ok: false, error: "Not authorized." };
   await prisma.product.delete({ where: { id } });
+  revalidateTag("products", "max");
   revalidatePath("/shop");
   revalidatePath("/admin/products");
+  revalidatePath("/");
   return { ok: true };
 }

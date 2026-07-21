@@ -12,7 +12,7 @@ export function OrderSummary({
   shipping: number | null;
   /** null = not known yet → total row falls back to the subtotal. */
   total: number | null;
-  /** Small caption under the shipping row (e.g. "Speed Post to Delhi · ~1800 km"). */
+  /** Small caption under the shipping row (e.g. "Speed Post to Delhi"). */
   shippingNote?: string;
   children?: React.ReactNode;
 }) {

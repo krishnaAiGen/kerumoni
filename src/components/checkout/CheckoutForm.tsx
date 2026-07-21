@@ -45,9 +45,7 @@ export function CheckoutForm({ subtotal }: { subtotal: number }) {
       return;
     }
     setShipping(res.shipping);
-    setShipNote(
-      `Speed Post to ${c} · ${res.local ? "within city" : `~${res.distanceKm} km`} · ${res.band}`,
-    );
+    setShipNote(`Speed Post to ${c}`);
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
