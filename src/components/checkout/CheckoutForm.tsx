@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { createCheckoutOrder, finalizeSimulatedPayment } from "@/actions/order.actions";
 import { estimateShipping } from "@/actions/shipping.actions";
 import { Button } from "@/components/ui/Button";
@@ -27,30 +27,57 @@ export function CheckoutForm({ subtotal }: { subtotal: number }) {
 
   const total = shipping !== null ? subtotal + shipping : null;
 
-  async function quoteCity(value: string) {
+  // Debounced live shipping quote. `quoteSeq` discards stale responses when the
+  // city changes while an earlier request is still in flight.
+  const quoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quoteSeq = useRef(0);
+
+  // Auto-quote shipping as the customer types their city, so the total is ready
+  // by the time they reach the Pay button.
+  function onCityChange(value: string) {
+    setCity(value);
     const c = value.trim();
+    if (quoteTimer.current) clearTimeout(quoteTimer.current);
+    quoteSeq.current += 1;
+
     if (c.length < 2) {
+      setShipLoading(false);
       setShipping(null);
       setShipNote(undefined);
       return;
     }
+
     setShipLoading(true);
-    setShipNote("Calculating shipping…");
     setShipping(null);
-    const res = await estimateShipping(c);
-    setShipLoading(false);
-    if (!res.ok) {
-      setShipping(null);
-      setShipNote(res.error);
-      return;
-    }
-    setShipping(res.shipping);
-    setShipNote(`Speed Post to ${c}`);
+    setShipNote("Calculating shipping…");
+
+    const seq = quoteSeq.current;
+    quoteTimer.current = setTimeout(async () => {
+      const res = await estimateShipping(c);
+      if (seq !== quoteSeq.current) return; // a newer edit superseded this quote
+      setShipLoading(false);
+      if (!res.ok) {
+        setShipping(null);
+        setShipNote(res.error);
+        return;
+      }
+      setShipping(res.shipping);
+      setShipNote(`Speed Post to ${c}`);
+    }, 500);
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    // Don't let anyone pay against an unknown total (e.g. pressing Enter while
+    // the shipping quote is still in flight — that bypasses the disabled button).
+    if (shipLoading) return;
+    if (total === null) {
+      setError("Enter your delivery city to calculate shipping before paying.");
+      return;
+    }
+
     const form = new FormData(e.currentTarget);
     const input = {
       customerName: String(form.get("customerName") ?? ""),
@@ -158,22 +185,21 @@ export function CheckoutForm({ subtotal }: { subtotal: number }) {
               <Input name="pincode" placeholder="785001" required />
             </div>
             <div className="sm:col-span-2">
-              <Label>Address</Label>
-              <Input name="address" placeholder="House no, street, area" required />
-            </div>
-            <div className="sm:col-span-2">
               <Label>City / Town</Label>
               <Input
                 name="city"
                 placeholder="Jorhat"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
-                onBlur={() => quoteCity(city)}
+                onChange={(e) => onCityChange(e.target.value)}
                 required
               />
               <p className="mt-1 text-xs text-ink2">
                 Shipping is calculated from Guwahati to your city.
               </p>
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Address</Label>
+              <Input name="address" placeholder="House no, street, area" required />
             </div>
           </div>
 
@@ -209,10 +235,27 @@ export function CheckoutForm({ subtotal }: { subtotal: number }) {
             total={total}
             shippingNote={shipNote}
           >
-            <Button type="submit" className="mt-5 w-full" loading={pending}>
-              {pending ? "Processing…" : `Pay ${formatMoney(total ?? subtotal)} securely`}
+            <Button
+              type="submit"
+              className="mt-5 w-full"
+              loading={pending || shipLoading}
+              disabled={total === null}
+            >
+              {pending
+                ? "Processing…"
+                : shipLoading
+                  ? "Calculating shipping…"
+                  : total === null
+                    ? "Enter your city for total"
+                    : `Pay ${formatMoney(total)} securely`}
             </Button>
-            <p className="mt-3 text-center text-xs text-ink2">🔒 Secured payment</p>
+            {total === null && !shipLoading ? (
+              <p className="mt-3 text-center text-xs text-ink2">
+                Enter your delivery city to calculate shipping and see your total.
+              </p>
+            ) : (
+              <p className="mt-3 text-center text-xs text-ink2">🔒 Secured payment</p>
+            )}
           </OrderSummary>
         </div>
       </form>
