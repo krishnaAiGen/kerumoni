@@ -4,11 +4,16 @@ export function OrderSummary({
   subtotal,
   shipping,
   total,
+  shippingNote,
   children,
 }: {
   subtotal: number;
-  shipping: number;
-  total: number;
+  /** null = not known yet (e.g. city not entered) → shown as "At checkout". */
+  shipping: number | null;
+  /** null = not known yet → total row falls back to the subtotal. */
+  total: number | null;
+  /** Small caption under the shipping row (e.g. "Speed Post to Delhi · ~1800 km"). */
+  shippingNote?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -21,11 +26,20 @@ export function OrderSummary({
         </div>
         <div className="flex justify-between">
           <dt className="text-ink2">Shipping</dt>
-          <dd className="text-ink">{shipping === 0 ? "Free" : formatMoney(shipping)}</dd>
+          <dd className="text-ink">
+            {shipping === null
+              ? "Calculated at checkout"
+              : shipping === 0
+                ? "Free"
+                : formatMoney(shipping)}
+          </dd>
         </div>
+        {shippingNote && <p className="text-xs text-ink2">{shippingNote}</p>}
         <div className="mt-2 flex justify-between border-t border-line pt-3 text-base">
           <dt className="font-semibold text-ink">Total</dt>
-          <dd className="font-semibold text-mustard">{formatMoney(total)}</dd>
+          <dd className="font-semibold text-mustard">
+            {total === null ? formatMoney(subtotal) : formatMoney(total)}
+          </dd>
         </div>
       </dl>
       {children}

@@ -2,6 +2,7 @@ import { getCart } from "@/data/cart";
 import { auth } from "@/lib/auth";
 import { CartItemRow } from "@/components/cart/CartItemRow";
 import { OrderSummary } from "@/components/cart/OrderSummary";
+import { CheckoutButton } from "@/components/cart/CheckoutButton";
 import { ButtonLink } from "@/components/ui/Button";
 
 export const metadata = { title: "Cart · Kerumoni" };
@@ -40,10 +41,13 @@ export default async function CartPage() {
           ))}
         </div>
         <div className="h-fit">
-          <OrderSummary subtotal={cart.subtotal} shipping={cart.shipping} total={cart.total}>
-            <ButtonLink href="/checkout" className="mt-5 w-full">
-              Proceed to checkout
-            </ButtonLink>
+          <OrderSummary
+            subtotal={cart.subtotal}
+            shipping={null}
+            total={null}
+            shippingNote="Shipping is calculated at checkout from your delivery city."
+          >
+            <CheckoutButton count={cart.count} />
           </OrderSummary>
         </div>
       </div>

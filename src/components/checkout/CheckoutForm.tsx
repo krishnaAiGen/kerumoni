@@ -3,24 +3,52 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createCheckoutOrder, finalizeSimulatedPayment } from "@/actions/order.actions";
+import { estimateShipping } from "@/actions/shipping.actions";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, FieldError } from "@/components/ui/Input";
 import { OrderSummary } from "@/components/cart/OrderSummary";
 import { SimulatedPaymentModal } from "./SimulatedPaymentModal";
-import { useToast } from "@/components/ui/Toast";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/constants";
 import { cn, formatMoney } from "@/lib/utils";
-import { loadRazorpay, type RazorpayResponse } from "@/lib/load-razorpay";
+import { loadRazorpay, type RazorpayResponse, type RazorpayFailure } from "@/lib/load-razorpay";
 
-type Totals = { subtotal: number; shipping: number; total: number };
-
-export function CheckoutForm({ totals }: { totals: Totals }) {
+export function CheckoutForm({ subtotal }: { subtotal: number }) {
   const router = useRouter();
-  const { toast } = useToast();
   const [method, setMethod] = useState<PaymentMethod>("UPI");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [sim, setSim] = useState<{ orderId: string; amount: number } | null>(null);
+
+  // Distance-based shipping, quoted from the delivery city.
+  const [city, setCity] = useState("");
+  const [shipping, setShipping] = useState<number | null>(null);
+  const [shipNote, setShipNote] = useState<string | undefined>();
+  const [shipLoading, setShipLoading] = useState(false);
+
+  const total = shipping !== null ? subtotal + shipping : null;
+
+  async function quoteCity(value: string) {
+    const c = value.trim();
+    if (c.length < 2) {
+      setShipping(null);
+      setShipNote(undefined);
+      return;
+    }
+    setShipLoading(true);
+    setShipNote("Calculating shipping…");
+    setShipping(null);
+    const res = await estimateShipping(c);
+    setShipLoading(false);
+    if (!res.ok) {
+      setShipping(null);
+      setShipNote(res.error);
+      return;
+    }
+    setShipping(res.shipping);
+    setShipNote(
+      `Speed Post to ${c} · ${res.local ? "within city" : `~${res.distanceKm} km`} · ${res.band}`,
+    );
+  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,6 +95,10 @@ export function CheckoutForm({ totals }: { totals: Totals }) {
         order_id: res.razorpayOrderId,
         prefill: res.prefill,
         theme: { color: "#b5482a" },
+        modal: {
+          // User closed the Razorpay modal without paying.
+          ondismiss: () => setError("Payment cancelled — you can try again."),
+        },
         handler: async (r: RazorpayResponse) => {
           const verifyRes = await fetch("/api/razorpay/verify", {
             method: "POST",
@@ -82,10 +114,16 @@ export function CheckoutForm({ totals }: { totals: Totals }) {
           if (verifyRes.ok) {
             router.push(`/orders/${res.orderId}`);
           } else {
-            toast(verifyRes.error ?? "Payment verification failed");
+            setError(verifyRes.error ?? "Payment verification failed. You were not charged.");
           }
         },
       });
+
+      // Payment attempted but failed (card declined, etc.).
+      rzp.on("payment.failed", (resp: RazorpayFailure) => {
+        setError(resp.error?.description ?? "Payment failed. Please try another method.");
+      });
+
       rzp.open();
     });
   }
@@ -127,7 +165,17 @@ export function CheckoutForm({ totals }: { totals: Totals }) {
             </div>
             <div className="sm:col-span-2">
               <Label>City / Town</Label>
-              <Input name="city" placeholder="Jorhat" required />
+              <Input
+                name="city"
+                placeholder="Jorhat"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                onBlur={() => quoteCity(city)}
+                required
+              />
+              <p className="mt-1 text-xs text-ink2">
+                Shipping is calculated from Guwahati to your city.
+              </p>
             </div>
           </div>
 
@@ -157,9 +205,14 @@ export function CheckoutForm({ totals }: { totals: Totals }) {
         </div>
 
         <div className="h-fit">
-          <OrderSummary subtotal={totals.subtotal} shipping={totals.shipping} total={totals.total}>
+          <OrderSummary
+            subtotal={subtotal}
+            shipping={shipLoading ? null : shipping}
+            total={total}
+            shippingNote={shipNote}
+          >
             <Button type="submit" className="mt-5 w-full" loading={pending}>
-              {pending ? "Processing…" : `Pay ${formatMoney(totals.total)} securely`}
+              {pending ? "Processing…" : `Pay ${formatMoney(total ?? subtotal)} securely`}
             </Button>
             <p className="mt-3 text-center text-xs text-ink2">🔒 Secured payment</p>
           </OrderSummary>

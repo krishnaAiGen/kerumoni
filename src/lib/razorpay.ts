@@ -18,10 +18,14 @@ export function razorpay(): Razorpay {
   return _client;
 }
 
-/** Create a Razorpay order. Amount is in paise (rupees * 100). */
+/** Create a Razorpay order. Amount (rupees) is converted to paise; min 100 paise. */
 export async function createRazorpayOrder(amountRupees: number, receipt: string) {
+  const amountPaise = Math.round(amountRupees * 100);
+  if (amountPaise < 100) {
+    throw new Error("Order amount must be at least ₹1 (100 paise).");
+  }
   return razorpay().orders.create({
-    amount: amountRupees * 100,
+    amount: amountPaise,
     currency: "INR",
     receipt,
   });
@@ -38,6 +42,19 @@ export function verifySignature(
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest("hex");
   // constant-time compare
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signature);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * Verify a Razorpay webhook call: HMAC-SHA256 of the RAW request body using
+ * RAZORPAY_WEBHOOK_SECRET, compared against the X-Razorpay-Signature header.
+ */
+export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret || !signature) return false;
+  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
   const a = Buffer.from(expected);
   const b = Buffer.from(signature);
   return a.length === b.length && crypto.timingSafeEqual(a, b);

@@ -4,6 +4,15 @@ export type RazorpayResponse = {
   razorpay_signature: string;
 };
 
+export type RazorpayFailure = {
+  error: {
+    code?: string;
+    description?: string;
+    reason?: string;
+    metadata?: { order_id?: string; payment_id?: string };
+  };
+};
+
 type RazorpayOptions = {
   key?: string;
   amount: number;
@@ -14,9 +23,13 @@ type RazorpayOptions = {
   prefill?: { name?: string; email?: string; contact?: string };
   theme?: { color?: string };
   handler: (response: RazorpayResponse) => void;
+  modal?: { ondismiss?: () => void };
 };
 
-type RazorpayInstance = { open: () => void };
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: "payment.failed", handler: (response: RazorpayFailure) => void) => void;
+};
 
 declare global {
   interface Window {

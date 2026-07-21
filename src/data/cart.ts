@@ -1,7 +1,8 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { calcTotals } from "@/lib/pricing";
+import { calcSubtotal } from "@/lib/pricing";
+import { parseGrams, BOX_WEIGHT_G } from "@/lib/shipping";
 
 export type CartLine = {
   productId: string;
@@ -14,11 +15,15 @@ export type CartLine = {
   qty: number;
 };
 
-/** Full cart for the current user, with totals. Empty when logged out. */
+/**
+ * Full cart for the current user. Shipping is NOT included here — it depends on
+ * the delivery city and is quoted at checkout. `weightGrams` is the total
+ * shipment weight (item weights × qty + one 50 g box). Empty when logged out.
+ */
 export async function getCart() {
   const session = await auth();
   if (!session?.user?.id) {
-    return { lines: [] as CartLine[], subtotal: 0, shipping: 0, total: 0, count: 0 };
+    return { lines: [] as CartLine[], subtotal: 0, count: 0, weightGrams: 0 };
   }
 
   const items = await prisma.cartItem.findMany({
@@ -38,9 +43,12 @@ export async function getCart() {
     qty: i.qty,
   }));
 
-  const totals = calcTotals(lines);
+  const subtotal = calcSubtotal(lines);
   const count = lines.reduce((n, l) => n + l.qty, 0);
-  return { lines, ...totals, count };
+  const itemGrams = lines.reduce((g, l) => g + parseGrams(l.weight) * l.qty, 0);
+  const weightGrams = itemGrams > 0 ? itemGrams + BOX_WEIGHT_G : 0;
+
+  return { lines, subtotal, count, weightGrams };
 }
 
 /** Lightweight cart item count for the navbar badge. */

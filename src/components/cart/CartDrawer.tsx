@@ -86,7 +86,12 @@ export function CartDrawer() {
         {/* Footer */}
         {cart && cart.lines.length > 0 && (
           <div className="border-t border-line px-6 py-5">
-            <OrderSummary subtotal={cart.subtotal} shipping={cart.shipping} total={cart.total}>
+            <OrderSummary
+              subtotal={cart.subtotal}
+              shipping={null}
+              total={null}
+              shippingNote="Shipping calculated at checkout from your city."
+            >
               <ButtonLink href="/checkout" onClick={closeCart} className="mt-5 w-full">
                 Proceed to checkout
               </ButtonLink>

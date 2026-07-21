@@ -6,6 +6,8 @@ import { auth } from "@/lib/auth";
 import { getCart } from "@/data/cart";
 import { deliverySchema, type DeliveryInput } from "@/lib/validators/checkout";
 import { generateOrderId } from "@/lib/ids";
+import { MIN_ORDER_QTY } from "@/lib/constants";
+import { quoteShipping } from "@/lib/geocode";
 import { isRazorpayConfigured, createRazorpayOrder } from "@/lib/razorpay";
 import { finalizePaidOrder } from "@/lib/finalize-order";
 
@@ -38,14 +40,32 @@ export async function createCheckoutOrder(input: DeliveryInput): Promise<Checkou
 
   const cart = await getCart();
   if (cart.lines.length === 0) return { ok: false, error: "Your cart is empty." };
+  if (cart.count < MIN_ORDER_QTY) {
+    return {
+      ok: false,
+      error: `Minimum order is ${MIN_ORDER_QTY} jars. Please add ${MIN_ORDER_QTY - cart.count} more.`,
+    };
+  }
+
+  // Shipping is recomputed server-side from the delivery city (never trusted from the client).
+  const quote = await quoteShipping(d.city, cart.weightGrams);
+  if (!quote) {
+    return { ok: false, error: "We couldn't verify your city for shipping — please check the spelling." };
+  }
+  const total = cart.subtotal + quote.shipping;
 
   const orderId = generateOrderId();
   const configured = isRazorpayConfigured();
 
   let razorpayOrderId: string;
   if (configured) {
-    const rp = await createRazorpayOrder(cart.total, orderId);
-    razorpayOrderId = rp.id;
+    try {
+      const rp = await createRazorpayOrder(total, orderId);
+      razorpayOrderId = rp.id;
+    } catch (err) {
+      console.error("Razorpay order creation failed:", err);
+      return { ok: false, error: "Could not start payment. Please try again." };
+    }
   } else {
     razorpayOrderId = `sim_${orderId}`;
   }
@@ -62,7 +82,7 @@ export async function createCheckoutOrder(input: DeliveryInput): Promise<Checkou
       paymentMethod: d.paymentMethod,
       razorpayOrderId,
       paymentStatus: "CREATED",
-      total: cart.total,
+      total,
       items: {
         create: cart.lines.map((l) => ({
           productId: l.productId,
@@ -79,7 +99,7 @@ export async function createCheckoutOrder(input: DeliveryInput): Promise<Checkou
     mode: configured ? "razorpay" : "simulated",
     orderId,
     razorpayOrderId,
-    amount: cart.total,
+    amount: total,
     keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     prefill: {
       name: d.customerName,

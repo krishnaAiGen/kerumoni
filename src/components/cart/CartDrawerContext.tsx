@@ -7,9 +7,8 @@ import type { CartLine } from "@/data/cart";
 export type CartData = {
   lines: CartLine[];
   subtotal: number;
-  shipping: number;
-  total: number;
   count: number;
+  weightGrams: number;
 };
 
 type CartDrawerContextValue = {

@@ -35,6 +35,5 @@ export const PAYMENT_METHODS: { value: PaymentMethod; label: string; sub: string
 // Rotating tone colors used when the admin creates a new product
 export const TONE_COLORS = ["#c98a2a", "#9d3f22", "#6a7b3f", "#b5482a", "#8f6a1e"];
 
-// Shipping rule
-export const FREE_SHIPPING_THRESHOLD = 500;
-export const SHIPPING_FEE = 40;
+// Minimum number of jars (total quantity) required to check out.
+export const MIN_ORDER_QTY = 2;
