@@ -16,7 +16,7 @@ export type ProductWithRating = Prisma.ProductGetPayload<object> & {
 
 function staticToProduct(p: StaticProduct): ProductWithRating {
   const { reviews, ...rest } = p;
-  return { ...rest, ...computeRating(reviews) };
+  return { ...rest, adminOnly: false, freeShipping: false, ...computeRating(reviews) };
 }
 
 /** Attach computed average rating + review count to products. */
@@ -56,26 +56,25 @@ const loadAllProducts = unstable_cache(
   { tags: ["products"], revalidate: 300 },
 );
 
-const loadFeaturedProducts = unstable_cache(
-  async (limit: number): Promise<ProductWithRating[]> => {
-    const products = await prisma.product.findMany({
-      orderBy: { createdAt: "asc" },
-      take: limit,
-    });
-    return withRatings(products);
-  },
-  ["featured-products"],
-  { tags: ["products"], revalidate: 300 },
-);
-
-export async function getAllProducts(): Promise<ProductWithRating[]> {
-  if (!hasDatabase()) return STATIC_PRODUCTS.map(staticToProduct);
-  return loadAllProducts();
+/**
+ * All products. `adminOnly` items (e.g. the ₹5 live-payment test pickle) are
+ * hidden from the public storefront — pass `includeAdminOnly` for admin views.
+ */
+export async function getAllProducts(
+  opts?: { includeAdminOnly?: boolean },
+): Promise<ProductWithRating[]> {
+  const all = hasDatabase()
+    ? await loadAllProducts()
+    : STATIC_PRODUCTS.map(staticToProduct);
+  return opts?.includeAdminOnly ? all : all.filter((p) => !p.adminOnly);
 }
 
 export async function getFeaturedProducts(limit = 4): Promise<ProductWithRating[]> {
-  if (!hasDatabase()) return STATIC_PRODUCTS.slice(0, limit).map(staticToProduct);
-  return loadFeaturedProducts(limit);
+  // The homepage never surfaces admin-only products.
+  const all = hasDatabase()
+    ? await loadAllProducts()
+    : STATIC_PRODUCTS.map(staticToProduct);
+  return all.filter((p) => !p.adminOnly).slice(0, limit);
 }
 
 export type ProductDetail = Prisma.ProductGetPayload<{ include: { reviews: true } }> & {
@@ -90,6 +89,8 @@ export async function getProductById(id: string): Promise<ProductDetail | null> 
     const { reviews, ...rest } = p;
     return {
       ...rest,
+      adminOnly: false,
+      freeShipping: false,
       reviews: reviews.map((r) => ({ ...r, productId: p.id })),
       ...computeRating(reviews),
     };
@@ -110,7 +111,7 @@ export async function getProductById(id: string): Promise<ProductDetail | null> 
   return { ...product, rating, reviewCount };
 }
 
-/** Admin listing (same shape, kept separate for clarity/future filters). */
+/** Admin listing — includes admin-only products so they're manageable. */
 export async function getProductsForAdmin(): Promise<ProductWithRating[]> {
-  return getAllProducts();
+  return getAllProducts({ includeAdminOnly: true });
 }

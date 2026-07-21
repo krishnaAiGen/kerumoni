@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { createProduct, updateProduct } from "@/actions/product.actions";
+import { createProduct, updateProduct, deleteProduct } from "@/actions/product.actions";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, Select, Textarea, FieldError } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
@@ -23,6 +23,23 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
   const [sellingPriceInput, setSellingPriceInput] = useState(String(product?.price ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [deleting, startDelete] = useTransition();
+
+  function onDelete() {
+    if (!product) return;
+    if (!window.confirm(`Delete "${product.name}" permanently? This can't be undone.`)) return;
+    setError(null);
+    startDelete(async () => {
+      const res = await deleteProduct(product.id);
+      if (!res.ok) {
+        setError(res.error ?? "Could not delete product.");
+        return;
+      }
+      toast("Product deleted");
+      router.push("/admin/products");
+      router.refresh();
+    });
+  }
 
   const previewDiscount = discountPercentOf(
     Number(originalPrice) || 0,
@@ -169,15 +186,28 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
 
       <FieldError>{error}</FieldError>
 
-      <Button type="submit" loading={pending}>
-        {pending
-          ? isEdit
-            ? "Saving…"
-            : "Publishing…"
-          : isEdit
-            ? "Save changes"
-            : "Publish pickle"}
-      </Button>
+      <div className="flex items-center gap-3">
+        <Button type="submit" loading={pending}>
+          {pending
+            ? isEdit
+              ? "Saving…"
+              : "Publishing…"
+            : isEdit
+              ? "Save changes"
+              : "Publish pickle"}
+        </Button>
+        {isEdit && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onDelete}
+            loading={deleting}
+            className="text-terra-d"
+          >
+            {deleting ? "Deleting…" : "Delete product"}
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

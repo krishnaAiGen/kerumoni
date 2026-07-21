@@ -62,6 +62,12 @@ export async function quoteShipping(
   city: string,
   weightGrams: number,
 ): Promise<ShippingQuote | null> {
+  // Nothing billable to ship (e.g. a cart of only free-shipping test items) —
+  // shipping is free and we don't need to geocode the city.
+  if (weightGrams <= 0) {
+    return { shipping: 0, distanceKm: 0, band: DISTANCE_BANDS[0], local: true };
+  }
+
   const isGuwahati = city.trim().toLowerCase() === SHIP_ORIGIN.name.toLowerCase();
   const dest = await geocodeCity(city);
   if (!dest) return null;

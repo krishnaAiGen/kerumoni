@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getProductById } from "@/data/products";
+import { auth } from "@/lib/auth";
 import { SpiceBadge } from "@/components/ui/SpiceBadge";
 import { Stars } from "@/components/ui/Stars";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
@@ -17,6 +18,12 @@ export default async function ProductPage({
   const { id } = await params;
   const product = await getProductById(id);
   if (!product) notFound();
+
+  // Admin-only products (e.g. the test pickle) aren't visible to customers.
+  if (product.adminOnly) {
+    const session = await auth();
+    if (session?.user?.role !== "ADMIN") notFound();
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">

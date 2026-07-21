@@ -86,7 +86,22 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ac
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
   if (!(await assertAdmin())) return { ok: false, error: "Not authorized." };
-  await prisma.product.delete({ where: { id } });
+
+  try {
+    await prisma.product.delete({ where: { id } });
+  } catch (err) {
+    // OrderItem references Product without cascade, so a pickle that appears in
+    // any past order can't be hard-deleted (Prisma P2003 foreign-key error).
+    if (err && typeof err === "object" && "code" in err && err.code === "P2003") {
+      return {
+        ok: false,
+        error:
+          "This pickle appears in past orders and can't be deleted. Set its stock to 0 to hide it instead.",
+      };
+    }
+    throw err;
+  }
+
   revalidateTag("products", "max");
   revalidatePath("/shop");
   revalidatePath("/admin/products");

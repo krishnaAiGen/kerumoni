@@ -45,7 +45,11 @@ export async function getCart() {
 
   const subtotal = calcSubtotal(lines);
   const count = lines.reduce((n, l) => n + l.qty, 0);
-  const itemGrams = lines.reduce((g, l) => g + parseGrams(l.weight) * l.qty, 0);
+  // Free-shipping items (e.g. the admin test pickle) don't add billable weight.
+  const itemGrams = items.reduce(
+    (g, i) => g + (i.product.freeShipping ? 0 : parseGrams(i.product.weight) * i.qty),
+    0,
+  );
   const weightGrams = itemGrams > 0 ? itemGrams + BOX_WEIGHT_G : 0;
 
   return { lines, subtotal, count, weightGrams };

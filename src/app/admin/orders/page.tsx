@@ -1,5 +1,5 @@
 import { getAllOrders } from "@/data/orders";
-import { AdvanceStatusButton } from "@/components/admin/AdvanceStatusButton";
+import { OrderActions } from "@/components/admin/OrderActions";
 import { formatMoney, statusLabel } from "@/lib/utils";
 
 export default async function AdminOrdersPage() {
@@ -37,7 +37,7 @@ export default async function AdminOrdersPage() {
                 </span>
               </Td>
               <Td>
-                <AdvanceStatusButton orderId={order.id} statusIndex={order.statusIndex} />
+                <OrderActions orderId={order.id} statusIndex={order.statusIndex} />
               </Td>
             </tr>
           ))}

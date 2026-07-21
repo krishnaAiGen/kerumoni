@@ -92,6 +92,8 @@ model Product {
   longDescription String
   imageUrl        String
   stock           Int        @default(0)
+  adminOnly       Boolean    @default(false) // hidden from public listings; only admins can see/buy
+  freeShipping    Boolean    @default(false) // excluded from Speed Post weight → no shipping charge
   createdAt       DateTime   @default(now())
 
   reviews    Review[]

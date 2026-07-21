@@ -1,10 +1,13 @@
 import { getAllProducts } from "@/data/products";
+import { auth } from "@/lib/auth";
 import { ProductCard } from "@/components/product/ProductCard";
 
 export const metadata = { title: "Shop · Kerumoni" };
 
 export default async function ShopPage() {
-  const products = await getAllProducts();
+  const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
+  const products = await getAllProducts({ includeAdminOnly: isAdmin });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">

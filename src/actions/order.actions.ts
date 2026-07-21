@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { getCart } from "@/data/cart";
 import { deliverySchema, type DeliveryInput } from "@/lib/validators/checkout";
 import { generateOrderId } from "@/lib/ids";
-import { MIN_ORDER_QTY } from "@/lib/constants";
+import { MIN_ORDER_QTY, ORDER_STATUSES } from "@/lib/constants";
 import { quoteShipping } from "@/lib/geocode";
 import { isRazorpayConfigured, createRazorpayOrder } from "@/lib/razorpay";
 import { finalizePaidOrder } from "@/lib/finalize-order";
@@ -145,8 +145,45 @@ export async function advanceOrderStatus(
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return { ok: false, error: "Order not found." };
 
-  const next = Math.min(order.statusIndex + 1, 3);
+  const next = Math.min(order.statusIndex + 1, ORDER_STATUSES.length - 1);
   await prisma.order.update({ where: { id: orderId }, data: { statusIndex: next } });
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/account");
+  return { ok: true };
+}
+
+/** Admin: set an order to any fulfilment stage directly (jump forward/back). */
+export async function setOrderStatus(
+  orderId: string,
+  statusIndex: number,
+): Promise<{ ok: boolean; error?: string }> {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") return { ok: false, error: "Not authorized." };
+
+  if (!Number.isInteger(statusIndex) || statusIndex < 0 || statusIndex > ORDER_STATUSES.length - 1) {
+    return { ok: false, error: "Invalid status." };
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return { ok: false, error: "Order not found." };
+
+  await prisma.order.update({ where: { id: orderId }, data: { statusIndex } });
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/account");
+  return { ok: true };
+}
+
+/** Admin: permanently delete an order (its line items cascade away). */
+export async function deleteOrder(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") return { ok: false, error: "Not authorized." };
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return { ok: false, error: "Order not found." };
+
+  await prisma.order.delete({ where: { id: orderId } });
 
   revalidatePath("/admin/orders");
   revalidatePath("/account");
